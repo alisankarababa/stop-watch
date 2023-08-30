@@ -11,23 +11,18 @@
 </head>
 
 <body>
-
     <section id="timer">
-        <div id="timer-digits">
+        <div id="timer-digits" class="d-flex gap-2 justify-content-center pt-5">
             <p>00:00:00</p>
         </div>
     </section>
 
     <section id="btns">
-        <div>
-            <button id="btn-start" type="button" class="btn btn-primary">Start</button>
-        </div>
-        <div>
-            <button id="btn-pause" class="btn btn-warning">Pause</button>
-        </div>
-        <div>
-            <button id="btn-stop" class="btn btn-danger">Stop</button>
-        </div>
+    <div class="d-flex gap-2 justify-content-center">
+            <button id="btn-start" type="button" class="btn btn-primary d-inline-flex align-items-center">Start</button>
+            <button id="btn-pause" class="btn btn-warning d-inline-flex align-items-center">Pause</button>
+            <button id="btn-stop" class="btn btn-danger d-inline-flex align-items-center">Stop</button>
+    </div>
     </section>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
