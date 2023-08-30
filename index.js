@@ -1,7 +1,11 @@
 let isTimerRunning = false;
 const timerDigits = document.getElementById("timer-digits");
 
+/*think about the case minutes exceeds 59*/
+/* time is running behind??? */
+
 let timer = {
+  centiseconds: 0,
   seconds: 0,
   minutes: 0,
   isRunning: false,
@@ -10,8 +14,10 @@ let timer = {
     this.timerDigits = document.getElementById("timer-digits");
   },
   start: function () {
-    this.isRunning = true;
-    this.run();
+    if (!this.isRunning) {
+      this.isRunning = true;
+      this.run();
+    }
   },
   run: function () {
     const thisObj = this;
@@ -20,7 +26,7 @@ let timer = {
         thisObj.setTimerDigits(timer.increment().getFormattedTime());
         thisObj.run();
       }
-    }, 1000);
+    }, 10);
   },
   pause: function () {
     this.isRunning = false;
@@ -32,23 +38,27 @@ let timer = {
     return this;
   },
   increment: function () {
-    if (59 === this.seconds) {
+    if (99 === this.centiseconds) {
+      ++this.seconds;
+      this.centiseconds = 0;
+    } else if (59 === this.seconds) {
       ++this.minutes;
       this.seconds = 0;
     } else {
-      ++this.seconds;
+      ++this.centiseconds;
     }
     return this;
   },
   reset: function () {
     this.seconds = 0;
     this.minutes = 0;
+    this.centiseconds = 0;
     return this;
   },
   getFormattedTime: function () {
-    return `${this.minutes.toString().padStart(2, "0")} : ${this.seconds
+    return `${this.minutes.toString().padStart(2, "0")}:${this.seconds
       .toString()
-      .padStart(2, "0")}`;
+      .padStart(2, "0")}:${this.centiseconds.toString().padStart(2, "0")}`;
   },
   setTimerDigits: function (formattedDigitStr) {
     this.timerDigits.innerText = formattedDigitStr;
