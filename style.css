@@ -1,0 +1,32 @@
+body
+{
+    background-color: black;
+}
+
+#timer
+{
+    color: white;
+}
+
+#btns, #timer
+{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+#timer
+{
+    flex-direction: column;
+}
+
+#timer-digits
+{
+    font-size: 5rem;
+}
+
+.btn
+{
+    font-size: 2rem;
+}
