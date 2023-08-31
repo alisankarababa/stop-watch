@@ -8,32 +8,31 @@ let timer = {
   centiseconds: 0,
   seconds: 0,
   minutes: 0,
-  isRunning: false,
   timerDigits: null,
+  idTimeOut: null,
   init: function () {
     this.timerDigits = document.getElementById("timer-digits");
   },
   start: function () {
-    if (!this.isRunning) {
-      this.isRunning = true;
+    if (!this.idTimeOut) {
       this.run();
     }
   },
   run: function () {
     const thisObj = this;
-    setTimeout(function () {
-      if (thisObj.isRunning) {
-        thisObj.setTimerDigits(timer.increment().getFormattedTime());
-        thisObj.run();
-      }
+    this.idTimeOut = setTimeout(function () {
+      thisObj.setTimerDigits(timer.increment().getFormattedTime());
+      thisObj.run();
     }, 10);
   },
   pause: function () {
-    this.isRunning = false;
+    clearTimeout(this.idTimeOut);
+    this.idTimeOut = null;
     return this;
   },
   stop: function () {
-    this.isRunning = false;
+    clearTimeout(this.idTimeOut);
+    this.idTimeOut = null;
     this.setTimerDigits(timer.reset().getFormattedTime());
     return this;
   },
