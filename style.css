@@ -17,3 +17,15 @@ body
 {
     font-size: 2rem;
 }
+
+#lap-header, #lap-time-digits
+{
+    visibility: hidden;
+    color: white;
+}
+
+#lap-recs
+{
+    color: white;
+}
+
