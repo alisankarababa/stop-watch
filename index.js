@@ -2,26 +2,17 @@
 
 /*think about the case minutes exceeds 59*/
 
-let timer = {
-  centiseconds: 0,
-  seconds: 0,
-  minutes: 0,
-  lapCentiseconds: 0,
-  lapSeconds: 0,
-  lapMinutes: 0,
-  timerDigits: null,
-  lapDigits: null,
-  idTimeOut: null,
-  timeBase: null,
-  lapTimeBase: null,
-  isLapActive: false,
-  init: function () {
-    this.timerDigits = document.getElementById("overall-time-digits");
-    this.lapDigits = document.getElementById("lap-time-digits");
+class StopWatch {
+  constructor(callBackTickComplete = null) {
+    this.centiseconds = 0;
+    this.seconds = 0;
+    this.minutes = 0;
+    this.idTimeOut = null;
+    this.timeBase = null;
+    this.cbTickComplete = callBackTickComplete;
+  }
 
-    return this.lapDigits && this.timerDigits;
-  },
-  start: function () {
+  start() {
     if (!this.idTimeOut) {
       this.run();
       this.timeBase = new Date(
@@ -30,18 +21,10 @@ let timer = {
           1000 * this.seconds -
           60000 * this.minutes
       );
-
-      if (this.isLapActive) {
-        this.lapTimeBase = new Date(
-          Date.now() -
-            10 * this.lapCentiseconds -
-            1000 * this.lapSeconds -
-            60000 * this.lapMinutes
-        );
-      }
     }
-  },
-  run: function () {
+  }
+
+  run() {
     const thisObj = this;
     this.idTimeOut = setTimeout(function () {
       let relativeTime = new Date() - thisObj.timeBase;
@@ -50,95 +33,107 @@ let timer = {
       thisObj.minutes = timeNow.getMinutes();
       thisObj.seconds = timeNow.getSeconds();
       thisObj.centiseconds = Math.trunc(timeNow.getMilliseconds() / 10);
-      thisObj.setTimerDigits(thisObj.getFormattedTime());
-
-      if (thisObj.isLapActive) {
-        const relativeLapTime = new Date() - thisObj.lapTimeBase;
-        const timeLapNow = new Date(relativeLapTime);
-
-        thisObj.lapMinutes = timeLapNow.getMinutes();
-        thisObj.lapSeconds = timeLapNow.getSeconds();
-        thisObj.lapCentiseconds = Math.trunc(timeLapNow.getMilliseconds() / 10);
-
-        thisObj.setLapDigits(thisObj.getFormattedLapTime());
+      if (thisObj.cbTickComplete) {
+        cbTickComplete(thisObj);
       }
+      //thisObj.setTimerDigits(thisObj.getFormattedTime()); bu islemi client kodun yapması lazım!
 
       thisObj.run();
     }, 200);
-  },
-  pause: function () {
+  }
+
+  stop() {
     clearTimeout(this.idTimeOut);
     this.idTimeOut = null;
     return this;
-  },
-  reset: function () {
+  }
+
+  reset() {
     this.seconds = 0;
     this.minutes = 0;
     this.centiseconds = 0;
     this.timeBase = null;
 
-    this.lapSeconds = 0;
-    this.lapMinutes = 0;
-    this.lapCentiseconds = 0;
-    this.lapTimeBase = null;
-    this.isLapActive = false;
-
-    this.setTimerDigits(this.getFormattedTime());
-    this.setLapDigits(this.getFormattedLapTime());
+    //alttaki iki satırı client kodun gerceklestirmesi lazım!
+    //this.setTimerDigits(this.getFormattedTime());
+    //this.setLapDigits(this.getFormattedLapTime());
 
     return this;
-  },
-  lap: function () {
-    this.lapTimeBase = new Date();
+  }
 
-    this.lapCentiseconds = 0;
-    this.lapSeconds = 0;
-    this.lapMinutes = 0;
-    this.isLapActive = true;
-    this.setLapDigits(this.getFormattedLapTime());
-    return this;
-  },
-  getFormattedLapTime: function () {
-    return `${this.lapMinutes.toString().padStart(2, "0")}:${this.lapSeconds
-      .toString()
-      .padStart(2, "0")}:${this.lapCentiseconds.toString().padStart(2, "0")}`;
-  },
-  getFormattedTime: function () {
+  getFormattedTime() {
     return `${this.minutes.toString().padStart(2, "0")}:${this.seconds
       .toString()
       .padStart(2, "0")}:${this.centiseconds.toString().padStart(2, "0")}`;
-  },
-  setTimerDigits: function (formattedDigitStr) {
-    this.timerDigits.innerText = formattedDigitStr;
-  },
-  setLapDigits: function (formattedDigitStr) {
-    this.lapDigits.innerText = formattedDigitStr;
-  },
-};
+  }
+}
+
+function cbTickComplete(objStopWatch) {
+  const formattedTime = objStopWatch.getFormattedTime();
+
+  switch (objStopWatch) {
+    case timerOverAll:
+      overAllTimeDigits.innerText = formattedTime;
+      break;
+
+    case timerLap:
+      lapTimeDigits.innerText = formattedTime;
+      break;
+
+    default:
+      //???
+      break;
+  }
+}
+
+const timerOverAll = new StopWatch(cbTickComplete);
+const timerLap = new StopWatch(cbTickComplete);
 
 const buttons = document.querySelectorAll(".btn");
 const btn1 = document.getElementById("btn-lap");
+btn1.disabled = true;
 const btn2 = document.getElementById("btn-start");
+
 const secLapRecs = document.getElementById("lap-recs");
 const secLapHeader = document.getElementById("lap-header");
 const secLapRecordsContainer = secLapRecs.firstElementChild;
+const overAllTimeDigits = document.getElementById("overall-time-digits");
+const lapTimeDigits = document.getElementById("lap-time-digits");
+
 let cntLap = 0;
+
+if (
+  !btn1 ||
+  !btn2 ||
+  !secLapRecs ||
+  !secLapHeader ||
+  !secLapRecordsContainer ||
+  !overAllTimeDigits ||
+  !lapTimeDigits
+) {
+  alert("ERROR!!");
+}
 
 function btnFunc(idBtn) {
   switch (idBtn) {
     case "btn-start":
       btn2.id = "btn-stop";
       btn2.innerText = "Stop";
-      timer.start();
+
+      timerOverAll.start();
+
       btn1.disabled = false;
       break;
 
     case "btn-stop":
       btn1.id = "btn-reset";
       btn1.innerText = "Reset";
+
       btn2.id = "btn-resume";
       btn2.innerText = "Resume";
-      timer.pause();
+
+      timerLap.stop();
+      timerOverAll.stop();
       break;
     case "btn-resume":
       btn1.id = "btn-lap";
@@ -146,27 +141,31 @@ function btnFunc(idBtn) {
       btn2.id = "btn-stop";
       btn2.innerText = "Stop";
 
-      timer.start();
+      if (cntLap) {
+        timerLap.start();
+      }
+      timerOverAll.start();
       break;
     case "btn-reset":
       btn1.id = "btn-lap";
       btn1.innerText = "Lap";
+
       btn2.id = "btn-start";
       btn2.innerText = "Start";
-      timer.reset();
+
+      timerOverAll.reset();
+      overAllTimeDigits.innerText = timerOverAll.getFormattedTime();
+
+      timerLap.reset();
+      lapTimeDigits.innerText = timerLap.getFormattedTime();
+
       btn1.disabled = true;
       secLapRecordsContainer.replaceChildren();
       secLapHeader.style.visibility = "hidden";
+      lapTimeDigits.style.visibility = "hidden";
       cntLap = 0;
       break;
     case "btn-lap":
-      if (!cntLap) {
-        secLapHeader.style.visibility = "visible";
-        timer.lapDigits.style.visibility = "visible";
-      }
-
-      console.log("here");
-
       const divRow = document.createElement("div");
       divRow.classList.add("row", "align-items-center");
       const divColCntLap = document.createElement("div");
@@ -175,27 +174,32 @@ function btnFunc(idBtn) {
       divColCntLap.classList.add("col-sm-12", "col-md-4");
       divColTimeLap.classList.add("col-sm-12", "col-md-4");
       divColTimeOverall.classList.add("col-sm-12", "col-md-4");
+      secLapRecordsContainer.prepend(divRow);
 
+      timerLap.stop();
+      lapTimeDigits.innerText = timerLap.getFormattedTime();
+
+      divColTimeOverall.innerText = timerOverAll.getFormattedTime();
+      if (!cntLap) {
+        secLapHeader.style.visibility = "visible";
+        lapTimeDigits.style.visibility = "visible";
+        divColTimeLap.innerText = divColTimeOverall.innerText;
+      } else {
+        divColTimeLap.innerText = timerLap.getFormattedTime();
+      }
       divColCntLap.innerText = `${++cntLap}`;
-      divColTimeLap.innerText = timer.getFormattedLapTime();
-      divColTimeOverall.innerText = timer.getFormattedTime();
 
+      timerLap.reset();
+      timerLap.start();
       divRow.append(divColCntLap);
       divRow.append(divColTimeLap);
       divRow.append(divColTimeOverall);
 
-      secLapRecordsContainer.prepend(divRow);
-
-      timer.lap();
       break;
 
     default:
       break;
   }
-}
-
-if (!btn1 || !btn2 || !secLapRecs || !secLapHeader || !secLapRecordsContainer) {
-  alert("ERROR!!");
 }
 
 for (const button of buttons) {
@@ -204,9 +208,4 @@ for (const button of buttons) {
 
     btnFunc(this.id);
   });
-}
-
-btn1.disabled = true;
-if (!timer.init()) {
-  alert("ERROR TIMER INIT!");
 }
