@@ -33,10 +33,10 @@ class StopWatch {
       thisObj.minutes = timeNow.getMinutes();
       thisObj.seconds = timeNow.getSeconds();
       thisObj.centiseconds = Math.trunc(timeNow.getMilliseconds() / 10);
+
       if (thisObj.cbTickComplete) {
-        cbTickComplete(thisObj);
+        cbTickComplete(thisObj); // should i call the cbFunc with timeout???
       }
-      //thisObj.setTimerDigits(thisObj.getFormattedTime()); bu islemi client kodun yapması lazım!
 
       thisObj.run();
     }, 200);
@@ -53,10 +53,6 @@ class StopWatch {
     this.minutes = 0;
     this.centiseconds = 0;
     this.timeBase = null;
-
-    //alttaki iki satırı client kodun gerceklestirmesi lazım!
-    //this.setTimerDigits(this.getFormattedTime());
-    //this.setLapDigits(this.getFormattedLapTime());
 
     return this;
   }
@@ -114,89 +110,106 @@ if (
   alert("ERROR!!");
 }
 
+function start() {
+  btn2.id = "btn-stop";
+  btn2.innerText = "Stop";
+
+  timerOverAll.start();
+
+  btn1.disabled = false;
+}
+
+function reset() {
+  btn1.id = "btn-lap";
+  btn1.innerText = "Lap";
+
+  btn2.id = "btn-start";
+  btn2.innerText = "Start";
+
+  timerOverAll.reset();
+  overAllTimeDigits.innerText = timerOverAll.getFormattedTime();
+
+  timerLap.reset();
+  lapTimeDigits.innerText = timerLap.getFormattedTime();
+
+  btn1.disabled = true;
+  secLapRecordsContainer.replaceChildren();
+  secLapHeader.style.visibility = "hidden";
+  lapTimeDigits.style.visibility = "hidden";
+  cntLap = 0;
+}
+
+function stop() {
+  btn1.id = "btn-reset";
+  btn1.innerText = "Reset";
+
+  btn2.id = "btn-resume";
+  btn2.innerText = "Resume";
+
+  timerLap.stop();
+  timerOverAll.stop();
+}
+
+function resume() {
+  btn1.id = "btn-lap";
+  btn1.innerText = "Lap";
+  btn2.id = "btn-stop";
+  btn2.innerText = "Stop";
+
+  if (cntLap) {
+    timerLap.start();
+  }
+  timerOverAll.start();
+}
+
+function lap() {
+  const divRow = document.createElement("div");
+  divRow.classList.add("row", "align-items-center");
+  const divColCntLap = document.createElement("div");
+  const divColTimeLap = document.createElement("div");
+  const divColTimeOverall = document.createElement("div");
+  divColCntLap.classList.add("col-sm-12", "col-md-4");
+  divColTimeLap.classList.add("col-sm-12", "col-md-4");
+  divColTimeOverall.classList.add("col-sm-12", "col-md-4");
+  secLapRecordsContainer.prepend(divRow);
+
+  timerLap.stop();
+  lapTimeDigits.innerText = timerLap.getFormattedTime();
+
+  divColTimeOverall.innerText = timerOverAll.getFormattedTime();
+  if (!cntLap) {
+    secLapHeader.style.visibility = "visible";
+    lapTimeDigits.style.visibility = "visible";
+    divColTimeLap.innerText = divColTimeOverall.innerText;
+  } else {
+    divColTimeLap.innerText = timerLap.getFormattedTime();
+  }
+  divColCntLap.innerText = `${++cntLap}`;
+
+  timerLap.reset();
+  timerLap.start();
+  divRow.append(divColCntLap);
+  divRow.append(divColTimeLap);
+  divRow.append(divColTimeOverall);
+}
+
 function btnFunc(idBtn) {
   switch (idBtn) {
     case "btn-start":
-      btn2.id = "btn-stop";
-      btn2.innerText = "Stop";
-
-      timerOverAll.start();
-
-      btn1.disabled = false;
+      start();
       break;
-
     case "btn-stop":
-      btn1.id = "btn-reset";
-      btn1.innerText = "Reset";
-
-      btn2.id = "btn-resume";
-      btn2.innerText = "Resume";
-
-      timerLap.stop();
-      timerOverAll.stop();
+      stop();
       break;
     case "btn-resume":
-      btn1.id = "btn-lap";
-      btn1.innerText = "Lap";
-      btn2.id = "btn-stop";
-      btn2.innerText = "Stop";
-
-      if (cntLap) {
-        timerLap.start();
-      }
-      timerOverAll.start();
+      resume();
       break;
     case "btn-reset":
-      btn1.id = "btn-lap";
-      btn1.innerText = "Lap";
-
-      btn2.id = "btn-start";
-      btn2.innerText = "Start";
-
-      timerOverAll.reset();
-      overAllTimeDigits.innerText = timerOverAll.getFormattedTime();
-
-      timerLap.reset();
-      lapTimeDigits.innerText = timerLap.getFormattedTime();
-
-      btn1.disabled = true;
-      secLapRecordsContainer.replaceChildren();
-      secLapHeader.style.visibility = "hidden";
-      lapTimeDigits.style.visibility = "hidden";
-      cntLap = 0;
+      reset();
       break;
     case "btn-lap":
-      const divRow = document.createElement("div");
-      divRow.classList.add("row", "align-items-center");
-      const divColCntLap = document.createElement("div");
-      const divColTimeLap = document.createElement("div");
-      const divColTimeOverall = document.createElement("div");
-      divColCntLap.classList.add("col-sm-12", "col-md-4");
-      divColTimeLap.classList.add("col-sm-12", "col-md-4");
-      divColTimeOverall.classList.add("col-sm-12", "col-md-4");
-      secLapRecordsContainer.prepend(divRow);
-
-      timerLap.stop();
-      lapTimeDigits.innerText = timerLap.getFormattedTime();
-
-      divColTimeOverall.innerText = timerOverAll.getFormattedTime();
-      if (!cntLap) {
-        secLapHeader.style.visibility = "visible";
-        lapTimeDigits.style.visibility = "visible";
-        divColTimeLap.innerText = divColTimeOverall.innerText;
-      } else {
-        divColTimeLap.innerText = timerLap.getFormattedTime();
-      }
-      divColCntLap.innerText = `${++cntLap}`;
-
-      timerLap.reset();
-      timerLap.start();
-      divRow.append(divColCntLap);
-      divRow.append(divColTimeLap);
-      divRow.append(divColTimeOverall);
-
+      lap();
       break;
-
     default:
       break;
   }
