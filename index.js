@@ -1,41 +1,75 @@
-//const timerDigits = document.getElementById("overall-time-digits");
-
 /*think about the case minutes exceeds 59*/
 
 class StopWatch {
-  constructor(callBackTickComplete = null) {
+  constructor(callBackTickComplete = null, callBackLap = null) {
     this.centiseconds = 0;
     this.seconds = 0;
     this.minutes = 0;
-    this.idTimeOut = null;
+
+    this.lapCentiseconds = 0;
+    this.lapSeconds = 0;
+    this.lapMinutes = 0;
+
     this.timeBase = null;
+    this.lapTimeBase = null;
+    this.isLapActive = false;
+
+    this.idTimeOut = null;
     this.cbTickComplete = callBackTickComplete;
+    this.cbLap = callBackLap;
   }
 
   start() {
     if (!this.idTimeOut) {
+      const currentTime = Date.now();
+      this.timeBase =
+        currentTime -
+        10 * this.centiseconds -
+        1000 * this.seconds -
+        60000 * this.minutes;
+      this.lapTimeBase = currentTime;
+
+      if (this.isLapActive) {
+        this.lapTimeBase =
+          currentTime -
+          10 * this.lapCentiseconds -
+          1000 * this.lapSeconds -
+          60000 * this.lapMinutes;
+      }
+
       this.run();
-      this.timeBase = new Date(
-        Date.now() -
-          10 * this.centiseconds -
-          1000 * this.seconds -
-          60000 * this.minutes
-      );
     }
   }
 
   run() {
     const thisObj = this;
     this.idTimeOut = setTimeout(function () {
-      let relativeTime = new Date() - thisObj.timeBase;
-      const timeNow = new Date(relativeTime);
+      const currentTime = Date.now();
 
-      thisObj.minutes = timeNow.getMinutes();
-      thisObj.seconds = timeNow.getSeconds();
-      thisObj.centiseconds = Math.trunc(timeNow.getMilliseconds() / 10);
+      const relativeTime = currentTime - thisObj.timeBase;
+      const relativeDate = new Date(relativeTime);
+
+      thisObj.minutes = relativeDate.getMinutes();
+      thisObj.seconds = relativeDate.getSeconds();
+      thisObj.centiseconds = Math.trunc(relativeDate.getMilliseconds() / 10);
 
       if (thisObj.cbTickComplete) {
-        cbTickComplete(thisObj); // should i call the cbFunc with timeout???
+        thisObj.cbTickComplete(thisObj);
+      }
+
+      if (thisObj.isLapActive) {
+        const relativeLapTime = currentTime - thisObj.lapTimeBase;
+        const relativeLapDate = new Date(relativeLapTime);
+
+        thisObj.lapMinutes = relativeLapDate.getMinutes();
+        thisObj.lapSeconds = relativeLapDate.getSeconds();
+        thisObj.lapCentiseconds = Math.trunc(
+          relativeLapDate.getMilliseconds() / 10
+        );
+
+        if (thisObj.cbLap) {
+          thisObj.cbLap(thisObj);
+        }
       }
 
       thisObj.run();
@@ -52,9 +86,26 @@ class StopWatch {
     this.seconds = 0;
     this.minutes = 0;
     this.centiseconds = 0;
+
+    this.lapCentiseconds = 0;
+    this.lapSeconds = 0;
+    this.lapMinutes = 0;
+
     this.timeBase = null;
+    this.lapTimeBase = null;
+    this.isLapActive = false;
 
     return this;
+  }
+
+  lap() {
+    this.lapCentiseconds = 0;
+    this.lapSeconds = 0;
+    this.lapMinutes = 0;
+    this.isLapActive = true;
+    if (cbLap) {
+      cbLap(this);
+    }
   }
 
   getFormattedTime() {
@@ -62,28 +113,23 @@ class StopWatch {
       .toString()
       .padStart(2, "0")}:${this.centiseconds.toString().padStart(2, "0")}`;
   }
-}
 
-function cbTickComplete(objStopWatch) {
-  const formattedTime = objStopWatch.getFormattedTime();
-
-  switch (objStopWatch) {
-    case timerOverAll:
-      overAllTimeDigits.innerText = formattedTime;
-      break;
-
-    case timerLap:
-      lapTimeDigits.innerText = formattedTime;
-      break;
-
-    default:
-      //???
-      break;
+  getFormattedLapTime() {
+    return `${this.lapMinutes.toString().padStart(2, "0")}:${this.lapSeconds
+      .toString()
+      .padStart(2, "0")}:${this.lapCentiseconds.toString().padStart(2, "0")}`;
   }
 }
 
-const timerOverAll = new StopWatch(cbTickComplete);
-const timerLap = new StopWatch(cbTickComplete);
+function cbTickComplete(objStopWatch) {
+  overAllTimeDigits.innerText = objStopWatch.getFormattedTime();
+}
+
+function cbLap(objStopWatch) {
+  lapTimeDigits.innerText = objStopWatch.getFormattedLapTime();
+}
+
+const stopWatch = new StopWatch(cbTickComplete, cbLap);
 
 const buttons = document.querySelectorAll(".btn");
 const btn1 = document.getElementById("btn-lap");
@@ -114,7 +160,7 @@ function start() {
   btn2.id = "btn-stop";
   btn2.innerText = "Stop";
 
-  timerOverAll.start();
+  stopWatch.start();
 
   btn1.disabled = false;
 }
@@ -126,11 +172,11 @@ function reset() {
   btn2.id = "btn-start";
   btn2.innerText = "Start";
 
-  timerOverAll.reset();
-  overAllTimeDigits.innerText = timerOverAll.getFormattedTime();
+  stopWatch.reset();
+  overAllTimeDigits.innerText = stopWatch.getFormattedTime();
 
-  timerLap.reset();
-  lapTimeDigits.innerText = timerLap.getFormattedTime();
+  stopWatch.reset();
+  lapTimeDigits.innerText = stopWatch.getFormattedTime();
 
   btn1.disabled = true;
   secLapRecordsContainer.replaceChildren();
@@ -146,8 +192,8 @@ function stop() {
   btn2.id = "btn-resume";
   btn2.innerText = "Resume";
 
-  timerLap.stop();
-  timerOverAll.stop();
+  stopWatch.stop();
+  stopWatch.stop();
 }
 
 function resume() {
@@ -157,9 +203,9 @@ function resume() {
   btn2.innerText = "Stop";
 
   if (cntLap) {
-    timerLap.start();
+    stopWatch.start();
   }
-  timerOverAll.start();
+  stopWatch.start();
 }
 
 function lap() {
@@ -173,21 +219,20 @@ function lap() {
   divColTimeOverall.classList.add("col-sm-12", "col-md-4");
   secLapRecordsContainer.prepend(divRow);
 
-  timerLap.stop();
-  lapTimeDigits.innerText = timerLap.getFormattedTime();
+  stopWatch.stop();
 
-  divColTimeOverall.innerText = timerOverAll.getFormattedTime();
+  divColTimeOverall.innerText = stopWatch.getFormattedTime();
   if (!cntLap) {
     secLapHeader.style.visibility = "visible";
     lapTimeDigits.style.visibility = "visible";
     divColTimeLap.innerText = divColTimeOverall.innerText;
   } else {
-    divColTimeLap.innerText = timerLap.getFormattedTime();
+    divColTimeLap.innerText = stopWatch.getFormattedLapTime();
   }
   divColCntLap.innerText = `${++cntLap}`;
 
-  timerLap.reset();
-  timerLap.start();
+  stopWatch.lap();
+  stopWatch.start();
   divRow.append(divColCntLap);
   divRow.append(divColTimeLap);
   divRow.append(divColTimeOverall);
